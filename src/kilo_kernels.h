@@ -7,7 +7,7 @@
 #define HRAND ((float)(curand(&robots[rid].hstate) % 1000)/1000)
 #define SRAND ((float)(curand(&robots[rid].sstate) % 1000)/1000)
 #include "robot.h"
-
+void initialize_shapes(Rectangle *rectangles);
 void initialize_robots(Position *positions);
 void compute_step();
 void simulation_step();

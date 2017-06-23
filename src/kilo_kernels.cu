@@ -2,38 +2,71 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
-Robot    *cuda_robots;
-Position *cuda_next_positions;
+Robot      *cuda_robots;
+Position   *cuda_next_positions;
+Rectangle  *cuda_light_shapes;
+
 Robot local_robots[ROBOTS];
+
 
 __global__ void compute_step(Robot *robots, Position *next_position);
 __global__ void collision_and_comms(Robot *robots,Position *next_position);
 __global__ void update_state(Robot *robots,Position *next_position);
 __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions);
 __global__ void commpute_step_kernel(Robot *robots,Step *step);
+__global__ void compute_light(Robot *robots, Rectangle *cuda_light_shapes);
 
 static dim3 lingrid(1,1);
 static dim3 cuadgrid(ROBOTS,1);
 static dim3 block(ROBOTS,1);
+static dim3 shapesgrid;
 
-void initialize_robots(Position *positions)
+void initialize_shapes(Rectangle *rectangles, int shapecount)// add upload shapes.
+{
+    cudaMalloc((void**)&cuda_light_shapes, sizeof(Rectangle) * shapecount);
+	dim3 grid(shapecount,1);
+	shapesgrid = grid;
+ 	cudaMemcpy(cuda_light_shapes, rectangles, sizeof(Rectangle) * shapecount, cudaMemcpyHostToDevice);
+}
+
+// floats(x1,y1)(x2,y2) int(r,g,b)
+
+void initialize_robots(Position *positions) //
 {
     cudaMalloc((void**)&cuda_robots, sizeof(Robot) * ROBOTS);
 	cudaMalloc((void**)&cuda_next_positions, sizeof(Position) * ROBOTS);
-	initialize_robot_data_kernel <<< lingrid, block >>> ( cuda_robots, positions );
+	cudaMemcpy(cuda_next_positions, positions, sizeof(Position) * ROBOTS, cudaMemcpyHostToDevice);
+	initialize_robot_data_kernel <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
 }
 
 void simulation_step()
 {
 	compute_step <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
+	compute_light <<< shapesgrid, block >>> ( cuda_robots, cuda_light_shapes );
 	collision_and_comms <<< cuadgrid, block >>> ( cuda_robots, cuda_next_positions );
 	update_state <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
+	// download data
+	cudaMemcpy(local_robots, cuda_robots, sizeof(Robot) * ROBOTS, cudaMemcpyDeviceToHost);
+	// repopulate robots state
+	for (int rid=0;rid<ROBOTS;rid++)
+	{
+		// execute controller loop
+	}
+	cudaMemcpy(cuda_robots, local_robots, sizeof(Robot) * ROBOTS, cudaMemcpyHostToDevice);
+	// upload state changes
+	
 }
 
 Robot *download_robot_data()
 {
  	cudaMemcpy(local_robots, cuda_robots, sizeof(Robot) * ROBOTS, cudaMemcpyDeviceToHost);
     return local_robots;
+}
+
+__global__ void compute_light(Robot *robots, Rectangle *cuda_light_shapes)
+{
+    unsigned int sid = blockIdx.x;
+	unsigned int rid = threadIdx.x;
 }
 
 __global__ void compute_step(Robot *robots, Position *next_position)
@@ -99,7 +132,6 @@ __global__ void update_state(Robot *robots,Position *next_position)
 	robots[rid].position=next_position[rid];
 	robots[rid].tx_flag=false;
 }
-
 
 __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions)
 {

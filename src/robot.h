@@ -72,4 +72,16 @@ struct Robot
 	curandState_t hstate, sstate;
 };
 
+struct point_t {
+    float x;
+    float y;
+};
+
+struct Rectangle {
+    point_t pos;  // lower right corner
+    float width;
+    float height;
+    short color[3];
+};
+
 #endif

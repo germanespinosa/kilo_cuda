@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
     for (int s=0; s<STEPS; s++)    
     {
         simulation_step();
+		printf ( "step:%d or %d\r" ,s+1,STEPS);
     }
  	printf("done\n");     
 }
