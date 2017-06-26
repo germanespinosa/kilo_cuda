@@ -21,18 +21,18 @@ static dim3 cuadgrid(ROBOTS,1);
 static dim3 block(ROBOTS,1);
 static dim3 shapesgrid;
 
-void initialize_shapes(Rectangle *rectangles, int shapecount)// add upload shapes.
+void initialize_shapes(Rectangle *rectangles, int shapecount)
 {
+    // Upload shapes to GPU memory (light/shapes are static; occurs once at initialization)
     cudaMalloc((void**)&cuda_light_shapes, sizeof(Rectangle) * shapecount);
 	dim3 grid(shapecount,1);
 	shapesgrid = grid;
  	cudaMemcpy(cuda_light_shapes, rectangles, sizeof(Rectangle) * shapecount, cudaMemcpyHostToDevice);
 }
 
-// floats(x1,y1)(x2,y2) int(r,g,b)
-
-void initialize_robots(Position *positions) //
+void initialize_robots(Position *positions)
 {
+    // Upload initial robots/positions to GPU memory
     cudaMalloc((void**)&cuda_robots, sizeof(Robot) * ROBOTS);
 	cudaMalloc((void**)&cuda_next_positions, sizeof(Position) * ROBOTS);
 	cudaMemcpy(cuda_next_positions, positions, sizeof(Position) * ROBOTS, cudaMemcpyHostToDevice);
@@ -41,13 +41,17 @@ void initialize_robots(Position *positions) //
 
 void simulation_step()
 {
+    // Compute next positions/communications
 	compute_step <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
+    // Compute light sensor values from shapes
 	compute_light <<< shapesgrid, block >>> ( cuda_robots, cuda_light_shapes );
+    // Check if communcations/movements valid
 	collision_and_comms <<< cuadgrid, block >>> ( cuda_robots, cuda_next_positions );
+    // Update next state from validity checks
 	update_state <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
-	// download data
+	// Download robot data to CPU
 	cudaMemcpy(local_robots, cuda_robots, sizeof(Robot) * ROBOTS, cudaMemcpyDeviceToHost);
-	// repopulate robots state
+	// Repopulate robots state
 	for (int rid=0;rid<ROBOTS;rid++)
 	{
 		// execute controller loop
@@ -65,8 +69,13 @@ Robot *download_robot_data()
 
 __global__ void compute_light(Robot *robots, Rectangle *cuda_light_shapes)
 {
+    // Calculate light sensor values from rectangles
     unsigned int sid = blockIdx.x;
 	unsigned int rid = threadIdx.x;
+    // Check if robot is in shape
+    // If it is, set light to 1000
+    // TODO: How to check/reset light to 0 at each time step (essentially want 1 output ["any"/"or"] from all combined)
+    // TODO: How to deal with border area (gray light; maybe have to convert the way this is checked?)
 }
 
 __global__ void compute_step(Robot *robots, Position *next_position)
@@ -144,9 +153,9 @@ __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions)
 	curand_init(rid, 0, 0, &robots[rid].hstate);
 
 	// intitialize position
-	robots[rid].position.theta += positions[rid].theta;
 	robots[rid].position.x += positions[rid].x;
 	robots[rid].position.y += positions[rid].y;
+    robots[rid].position.theta += positions[rid].theta;
 	
 	// initialize movement parameters 
 	// turn

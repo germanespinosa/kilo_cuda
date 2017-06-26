@@ -4,14 +4,14 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
-#define ROBOTS 1000
-#define ARENA_WIDTH 3000
-#define ARENA_HEIGHT 3000
+#define ROBOTS 10
+#define ARENA_WIDTH 2400
+#define ARENA_HEIGHT 2400
 #define ROBOT_RADIUS 32
-#define TICS_PER_SECOND 32
-#define STEPS TICS_PER_SECOND * SECONDS
+//#define TICS_PER_SECOND 32
+//#define STEPS TICS_PER_SECOND * SECONDS
 
-#define PI 3.1415
+#define PI 3.1416
 #define MIN_TURN .05
 #define MAX_TURN .1
 #define MAX_TURN_ERROR .01
@@ -70,18 +70,6 @@ struct Robot
 	int left_motor, right_motor;
 	bool left_motor_active, right_motor_active;
 	curandState_t hstate, sstate;
-};
-
-struct point_t {
-    float x;
-    float y;
-};
-
-struct Rectangle {
-    point_t pos;  // lower right corner
-    float width;
-    float height;
-    short color[3];
 };
 
 #endif

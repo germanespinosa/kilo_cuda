@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/time.h>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
 
 
 void** alloc_2d(size_t y_size, size_t x_size, size_t element_size);
@@ -25,5 +27,17 @@ void** alloc_2d(size_t y_size, size_t x_size, size_t element_size);
     gettimeofday(&tv, &tz); long GTODEndTime =  tv.tv_sec * 1000 + tv.tv_usec / 1000 ;\
     printf("%g,", LOOPS__, (double)(GTODEndTime - GTODStartTime));\
 }
+
+struct point_t {
+    float x;
+    float y;
+};
+
+struct Rectangle {
+    point_t pos;  // lower right corner
+    float width;
+    float height;
+    short color[3];
+};
 
 #endif

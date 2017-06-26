@@ -1,7 +1,9 @@
 ### CMakeLists.txt for CUDA
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 find_package(CUDA QUIET REQUIRED)
+
+set (CMAKE_CXX_STANDARD 11)
 
 # Pass options to NVCC
 set(
@@ -21,5 +23,6 @@ cuda_add_executable(
     src/robot.cpp
     src/util.cpp
 	src/kilo_kernels.cu
+    src/vars.cpp
     )
 
