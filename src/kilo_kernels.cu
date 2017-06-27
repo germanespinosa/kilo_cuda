@@ -90,7 +90,7 @@ __global__ void compute_step(Robot *robots, Position *next_position)
 	float speed_error = HRAND * robots[rid].movement.speed_error - robots[rid].movement.speed_error / 2;
 	
 	step.turn = robots[rid].left_motor_active ? (robots[rid].right_motor_active ? robots[rid].movement.turn_forward: robots[rid].movement.turn_left) : (robots[rid].right_motor_active ? robots[rid].movement.turn_right: 0);
-	step.speed = robots[rid].left_motor_active ? (robots[rid].right_motor_active ? robots[rid].movement.speed_forward: robots[rid].movement.speed_left) : (robots[rid].right_motor_active ? robots[rid].movement.speed_right: 0);;
+	step.speed = robots[rid].left_motor_active ? (robots[rid].right_motor_active ? robots[rid].movement.speed_forward: robots[rid].movement.speed_left) : (robots[rid].right_motor_active ? robots[rid].movement.speed_right: 0);
 	
 	step.turn += step.turn ? turn_error : 0 ;
 	step.speed += step.speed ? speed_error : 0 ;
@@ -112,11 +112,11 @@ __global__ void compute_step(Robot *robots, Position *next_position)
 	}
 }
 
-__global__ void collision_and_comms(Robot *robots,Position *next_position)
+__global__ void collision_and_comms(Robot *robots, Position *next_position)
 {
     unsigned int nid = blockIdx.x;
     unsigned int rid = threadIdx.x;
-	float d=DIST(robots[rid].position, next_position[nid]);
+	float d = DIST(robots[rid].position, next_position[nid]);
 	float range_error = robots[rid].comm.range_error*HRAND - robots[rid].comm.range_error / 2;
 	float range=robots[rid].comm.range + range_error;
 	
@@ -148,7 +148,6 @@ __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions)
 	// initialize random seeds
 	// all robots have the same soft random sequence
 	curand_init(0, 0, 0, &robots[rid].sstate);
-
 	// all robots have different hard random sequence
 	curand_init(rid, 0, 0, &robots[rid].hstate);
 

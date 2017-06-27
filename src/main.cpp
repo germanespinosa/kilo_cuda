@@ -7,12 +7,8 @@
 #include <malloc.h>
 #include <math.h>
 #include <vector>
+
 #include "vars.h"
-#include "util.h"
-
-
-#define SECONDS 600
-
 #include "util.h"
 #include "kilo_kernels.h"
 #include "robot.h"
@@ -31,6 +27,7 @@ int main(int argc, char* argv[])
 
 	initialize_robots(initial_positions);
 	free(initial_positions);
+
     for (int s=0; s<timelimit*TICS_PER_SECOND; s++) {
         // Update robots in GPU
         simulation_step();

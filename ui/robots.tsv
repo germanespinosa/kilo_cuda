@@ -1,0 +1,6 @@
+id	x	y	theta	shape	r	g	b
+0	32	32	0	circle	255	0	0
+1	1000	1000	3.14	triangle-up	255	255	0
+2	2000	1000	3.14	square	0	255	0
+3	500	48	1	triangle-up	0	0	255
+4	500	112	5	square	255	0	255
