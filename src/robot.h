@@ -4,7 +4,7 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
-#define ROBOTS 1024
+#define ROBOTS 512
 #define ARENA_WIDTH 3000
 #define ARENA_HEIGHT 3000
 #define ROBOT_RADIUS 32
