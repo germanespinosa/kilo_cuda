@@ -8,8 +8,6 @@
 
 #include <stdio.h>
 #include <time.h>
-#include <sys/time.h>
-
 
 void** alloc_2d(size_t y_size, size_t x_size, size_t element_size);
 

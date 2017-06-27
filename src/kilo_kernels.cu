@@ -6,7 +6,7 @@ Robot      *cuda_robots;
 Position   *cuda_next_positions;
 Rectangle  *cuda_light_shapes;
 
-Robot local_robots[ROBOTS];
+static Robot local_robots[ROBOTS];
 
 
 __global__ void compute_step(Robot *robots, Position *next_position);
@@ -16,15 +16,14 @@ __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions)
 __global__ void commpute_step_kernel(Robot *robots,Step *step);
 __global__ void compute_light(Robot *robots, Rectangle *cuda_light_shapes);
 
-static dim3 lingrid(1,1);
-static dim3 cuadgrid(ROBOTS,1);
-static dim3 block(ROBOTS,1);
+static dim3 lingrid(LINGRID,1);
+static dim3 block(TILELIMIT,1);
 static dim3 shapesgrid;
 
 void initialize_shapes(Rectangle *rectangles, int shapecount)// add upload shapes.
 {
     cudaMalloc((void**)&cuda_light_shapes, sizeof(Rectangle) * shapecount);
-	dim3 grid(shapecount,1);
+	dim3 grid(LINGRID,shapecount);
 	shapesgrid = grid;
  	cudaMemcpy(cuda_light_shapes, rectangles, sizeof(Rectangle) * shapecount, cudaMemcpyHostToDevice);
 }
@@ -42,8 +41,9 @@ void initialize_robots(Position *positions) //
 void simulation_step()
 {
 	compute_step <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
-	compute_light <<< shapesgrid, block >>> ( cuda_robots, cuda_light_shapes );
-	collision_and_comms <<< cuadgrid, block >>> ( cuda_robots, cuda_next_positions );
+	//compute_light <<< shapesgrid, block >>> ( cuda_robots, cuda_light_shapes );
+	collision_and_comms <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
+	//collision_and_comms << < lingrid, block >> > (cuda_robots, cuda_next_positions);
 	update_state <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
 	// download data
 	cudaMemcpy(local_robots, cuda_robots, sizeof(Robot) * ROBOTS, cudaMemcpyDeviceToHost);
@@ -51,6 +51,7 @@ void simulation_step()
 	for (int rid=0;rid<ROBOTS;rid++)
 	{
 		// execute controller loop
+		//julias function (local_robots (*ROBOTS))
 	}
 	cudaMemcpy(cuda_robots, local_robots, sizeof(Robot) * ROBOTS, cudaMemcpyHostToDevice);
 	// upload state changes
@@ -65,13 +66,15 @@ Robot *download_robot_data()
 
 __global__ void compute_light(Robot *robots, Rectangle *cuda_light_shapes)
 {
-    unsigned int sid = blockIdx.x;
-	unsigned int rid = threadIdx.x;
+    unsigned int sid = SHAPEID;
+	unsigned int rid = ROBOTID;
+	//if robot rid is in shape sid 
+	// robot[rid] light = value. 
 }
 
 __global__ void compute_step(Robot *robots, Position *next_position)
 {
-    unsigned int rid = threadIdx.x;
+    unsigned int rid = ROBOTID;
 	//compute the movement needed	
 	Step step;
 	if (robots[rid].left_motor == 0) robots[rid].left_motor_active = false;
@@ -105,37 +108,50 @@ __global__ void compute_step(Robot *robots, Position *next_position)
 
 __global__ void collision_and_comms(Robot *robots,Position *next_position)
 {
-    unsigned int nid = blockIdx.x;
-    unsigned int rid = threadIdx.x;
-	float d=DIST(robots[rid].position, next_position[nid]);
-	float range_error = robots[rid].comm.range_error*HRAND - robots[rid].comm.range_error / 2;
-	float range=robots[rid].comm.range + range_error;
-	
-	if (robots[nid].tx_flag && HRAND>robots[rid].comm.range_error && d<range)
+	unsigned int rid = ROBOTID;
+//	unsigned int nid = blockIdx.x;
+	bool colide = false;
+	for (int nid = 0; nid < rid && !colide; nid++)
 	{
-		robots[nid].rx_flag=true;
-		for (int i=0;i<MESSAGE_SIZE;i++)
+		float d = DIST(next_position[rid],robots[nid].position);
+		if (d < ROBOT_RADIUS)
 		{
-			robots[nid].message_rx[i] = robots[rid].message_rx[i];
+			next_position[rid] = robots[rid].position;
+			colide = true;
 		}
 	}
-	
-	if (d<ROBOT_RADIUS)
+	if (robots[rid].tx_flag)
 	{
-		next_position[nid]=robots[nid].position;
+		float range_error = robots[rid].comm.range_error*HRAND - robots[rid].comm.range_error / 2;
+		float range = robots[rid].comm.range + range_error;
+		for (int nid = 0; nid < ROBOTS ; nid++)
+		{
+			float d = DIST(next_position[rid], robots[nid].position);
+			if (d < range)
+			{
+				if (HRAND > robots[rid].comm.comm_error)
+				{
+					robots[nid].rx_flag = true;
+					for (int i = 0; i < MESSAGE_SIZE; i++)
+					{
+						robots[nid].message_rx[i] = robots[rid].message_rx[i];
+					}
+				}
+			}
+		}
 	}
 }
 
 __global__ void update_state(Robot *robots,Position *next_position)
 {
-    unsigned int rid = threadIdx.x;
+    unsigned int rid = ROBOTID;
 	robots[rid].position=next_position[rid];
 	robots[rid].tx_flag=false;
 }
 
 __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions)
 {
-    unsigned int rid = threadIdx.x;
+    unsigned int rid = ROBOTID;
 	// initialize random seeds
 	// all robots have the same soft random sequence
 	curand_init(0, 0, 0, &robots[rid].sstate);
