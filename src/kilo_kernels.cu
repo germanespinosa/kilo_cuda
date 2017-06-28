@@ -2,11 +2,12 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
-Robot      *cuda_robots;
-Position   *cuda_next_positions;
-Rectangle  *cuda_light_shapes;
+static Robot      *cuda_robots;
+static Position   *cuda_next_positions;
+static Rectangle  *cuda_light_shapes;
 
 static Robot local_robots[ROBOTS];
+
 
 
 __global__ void compute_step(Robot *robots, Position *next_position);
@@ -26,6 +27,13 @@ void initialize_shapes(Rectangle *rectangles, int shapecount)// add upload shape
 	dim3 grid(LINGRID,shapecount);
 	shapesgrid = grid;
  	cudaMemcpy(cuda_light_shapes, rectangles, sizeof(Rectangle) * shapecount, cudaMemcpyHostToDevice);
+}
+
+void release_robots()
+{
+	cudaFree(cuda_robots);
+	cudaFree(cuda_next_positions);
+	cudaFree(cuda_light_shapes);
 }
 
 // floats(x1,y1)(x2,y2) int(r,g,b)

@@ -16,4 +16,5 @@ void initialize_robots(Position *positions);
 void compute_step();
 void simulation_step();
 Robot *download_robot_data();
+void release_robots();
 #endif
