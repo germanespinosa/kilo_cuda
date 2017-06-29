@@ -14,3 +14,8 @@ The output displays at 1 px = 1 mm in simulation. The easiest way to see what yo
 
 The goal is to live re-load the contents `robots.tsv`, which will be updated by the simulator. But it doesn't do that yet.
 
+## TODO:
+
+- Update when `robots.tsv` changes
+- Some way to interact/pause/change speed? (probably needs to happen on simulator end because this just recieves)
+- Maybe show time somewhere (below arena?)

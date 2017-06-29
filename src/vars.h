@@ -6,11 +6,11 @@
 #define PROJECT_VARS_H
 
 #include <vector>
+#include <string>
 #include "util.h"
 
 // General parameters
 extern int timelimit;  // in seconds
-extern bool showscene;
 
 // Communication & dissemination
 
@@ -29,6 +29,11 @@ const uint8_t TICS_PER_SECOND = 32;
 #define PI 3.1416
 
 // Time constants for detection (exploration/observation + dissemination)
+
+// Display/UI parameters
+extern bool showscene;
+extern std::string ui_shapes_filename;
+extern std::string ui_robots_filename;
 
 
 #endif //PROJECT_VARS_H

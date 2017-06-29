@@ -6,7 +6,6 @@
 
 // General parameters
 int timelimit = 180 * 60;  // seconds
-bool showscene = true;
 
 // Communication & dissemination
 
@@ -21,3 +20,8 @@ int arena_height = 2400;  // mm
 std::vector<Rectangle> rects = {};
 
 // Time constants for detection (exploration/observation + dissemination)
+
+// Display/UI parameters
+bool showscene = true;
+std::string ui_shapes_filename = "../ui/shapes.tsv";
+std::string ui_robots_filename = "../ui/robots.tsv";

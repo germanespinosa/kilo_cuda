@@ -7,6 +7,7 @@
 #include <malloc.h>
 #include <math.h>
 #include <vector>
+#include <string>
 
 #include "vars.h"
 #include "util.h"
@@ -68,4 +69,8 @@ Position *init_positions ()
         }
     }
     return positions;
+}
+
+void save_robot_pos() {
+    // Save the robot positions to a file ui/robots.tsv for display in a web browser
 }
