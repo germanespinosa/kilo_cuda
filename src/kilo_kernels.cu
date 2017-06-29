@@ -1,4 +1,5 @@
 #include "kilo_kernels.h"
+#include "kilobot.cpp"
 #include <curand.h>
 #include <curand_kernel.h>
 
@@ -48,6 +49,7 @@ void initialize_robots(Position *positions) //
 
 void simulation_step()
 {
+	static Kilo_Impl kilobot;
 	compute_step <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
 	//compute_light <<< shapesgrid, block >>> ( cuda_robots, cuda_light_shapes );
 	collision_and_comms <<< lingrid, block >>> ( cuda_robots, cuda_next_positions );
@@ -59,6 +61,7 @@ void simulation_step()
 	for (int rid=0;rid<ROBOTS;rid++)
 	{
 		// execute controller loop
+		kilobot.run_controller(local_robots + rid );
 		//julias function (local_robots (*ROBOTS))
 	}
 	cudaMemcpy(cuda_robots, local_robots, sizeof(Robot) * ROBOTS, cudaMemcpyHostToDevice);
@@ -74,8 +77,8 @@ Robot *download_robot_data()
 
 __global__ void compute_light(Robot *robots, Rectangle *cuda_light_shapes)
 {
-    unsigned int sid = SHAPEID;
-	unsigned int rid = ROBOTID;
+//    unsigned int sid = SHAPEID;
+//	unsigned int rid = ROBOTID;
 	//if robot rid is in shape sid 
 	// robot[rid] light = value. 
 }

@@ -59,6 +59,11 @@ struct Step
     float speed;
 };
 
+
+struct Led_Color
+{
+	float R, G, B;
+};
 struct Robot
 {
 	Position position;
@@ -70,15 +75,16 @@ struct Robot
 	int left_motor, right_motor;
 	bool left_motor_active, right_motor_active;
 	curandState_t hstate, sstate;
+	Led_Color led;
 };
 
-struct point_t {
+struct Point {
     float x;
     float y;
 };
 
 struct Rectangle {
-    point_t pos;  // lower right corner
+    Point pos;  // lower right corner
     float width;
     float height;
     short color[3];
