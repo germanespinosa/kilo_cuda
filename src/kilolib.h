@@ -13,28 +13,33 @@ public:
 	virtual void setup() = 0;
 	virtual void loop() = 0;
 	virtual int main() = 0;
-	void kilo_init()
-	{
 
-	};
+	void kilo_init() {};
+
 	void spinup_motors()
 	{
 		this_robot->left_motor_active = true;
 		this_robot->right_motor_active = true;
 	};
+
 	void set_motors(unsigned int l, unsigned int r)
 	{
 		this_robot->left_motor = l;
 		this_robot->right_motor = r;
 	};
-	void set_color(Led_Color c)
-	{
+
+	void set_color(Led_Color c) {
 		this_robot->led = c;
-	}
-	Led_Color RGB(float r, float g, float b)
-	{
-		return Led_Color{ r,g,b };
-	}
+	};
+
+	Led_Color RGB(float r, float g, float b) {
+        Led_Color tmp;
+        tmp.R = r;
+        tmp.G = g;
+        tmp.B = b;
+		return tmp;
+	};
+
 	void run_controller(Robot *r)
 	{
 		this_robot = r;

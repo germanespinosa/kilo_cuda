@@ -3,6 +3,8 @@
 cmake_minimum_required(VERSION 2.8)
 find_package(CUDA QUIET REQUIRED)
 
+set (CMAKE_CXX_STANDARD 11)
+
 # Pass options to NVCC
 set(
     CUDA_NVCC_FLAGS

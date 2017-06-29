@@ -64,6 +64,7 @@ struct Led_Color
 {
 	float R, G, B;
 };
+
 struct Robot
 {
 	Position position;
