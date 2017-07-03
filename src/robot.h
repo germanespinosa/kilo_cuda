@@ -4,7 +4,7 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
-#define ROBOTS 512
+#define ROBOTS 128
 #define ARENA_WIDTH 3000
 #define ARENA_HEIGHT 3000
 #define ROBOT_RADIUS 32
@@ -77,6 +77,12 @@ struct Robot
 	bool left_motor_active, right_motor_active;
 	curandState_t hstate, sstate;
 	Led_Color led;
+	float battery = -1;
+	float distance_measurement;
+	bool message_sent = false;
+	//flag set to 1 when new message received
+	int incoming_message_flag;
+    unsigned int motor_command;
 };
 
 struct Point {

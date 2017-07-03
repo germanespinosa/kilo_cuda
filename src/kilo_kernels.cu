@@ -174,6 +174,8 @@ __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions)
 	robots[rid].position.theta += positions[rid].theta;
 	robots[rid].position.x += positions[rid].x;
 	robots[rid].position.y += positions[rid].y;
+
+    // TODO: Include battery initialization (Gaussian distributed)
 	
 	// initialize movement parameters 
 	// turn

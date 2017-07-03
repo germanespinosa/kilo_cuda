@@ -37,4 +37,10 @@ class Kilo_Impl : public Kilobot
 
 		return 0;
 	}
+
+	void message_rx(message_t *message, distance_measurement_t *distance_measurement) {};
+	void message_tx_success() {};
+	message_t *message_tx() {
+        return NULL;
+    };
 };
