@@ -37,12 +37,13 @@ int main(int argc, char* argv[]) {
 	printf("DATA OK	\n");
 	for (int s=0; s<STEPS; s++) {
         simulation_step();
-		if (s%100==0) printf ( "step:%d or %d\r" ,(s+1)/TICS_PER_SECOND, SECONDS);
+		if (s%100==0) printf ( "step:%d or %d\r\n" ,(s+1)/TICS_PER_SECOND, SECONDS);
     }
 	printf("step:%d or %d\n", SECONDS, SECONDS);
 	release_robots();
  	printf("\ndone\n");
 	getchar();
+    release_cuda_memory();
 }
 
 Position *init_positions () {
