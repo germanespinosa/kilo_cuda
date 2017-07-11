@@ -1,4 +1,5 @@
 #include "kilo_kernels.h"
+#include "util.h"
 #include "kilolib.h"
 #include "kilocode.cpp"
 #include <curand.h>
@@ -9,7 +10,8 @@ static Position      *cuda_next_positions;
 static Rectangle     *cuda_light_shapes;
 static curandState_t *cuda_rand_states;
 
-static Robot local_robots[ROBOTS];
+static Robot         *local_robots;
+static Position      *local_positions;
 
 //kernels prototypes
 
@@ -17,7 +19,7 @@ __global__ void compute_step_kernel(Robot *robots, Position *next_position, cura
 __global__ void collision_and_comms_kernel(Robot *robots,Position *next_position, curandState_t *rand_states);
 __global__ void update_state_kernel(Robot *robots,Position *next_positio, curandState_t *rand_statesn);
 __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions, curandState_t *rand_states);
-__global__ void compute_step_kernel(Robot *robots,Step *step, curandState_t *rand_states);
+__global__ void compute_step_kernel(Robot *robots, Position *next_position, curandState_t *rand_states);
 __global__ void compute_light_kernel(Robot *robots, Rectangle *cuda_light_shapes, curandState_t *rand_states);
 
 static dim3 lingrid(LINGRID,1);
@@ -33,13 +35,22 @@ void initialize_shapes(Rectangle *rectangles, int shapecount)// add upload shape
 }
 // floats(x1,y1)(x2,y2) int(r,g,b)
 
+void initialize_positions(Position *positions)
+{
+	local_positions = (Position *)malloc(sizeof(Position)*ROBOTS);
+	HANDLE_ERROR(cudaMalloc((void**)&cuda_next_positions, sizeof(Position) * ROBOTS));
+	HANDLE_ERROR(cudaMemcpy(cuda_next_positions, positions, sizeof(Position) * ROBOTS, cudaMemcpyHostToDevice));
+}
 void initialize_robots(Position *positions) //
 {
-    cudaMalloc((void**)&cuda_robots, sizeof(Robot) * ROBOTS);
-	cudaMalloc((void**)&cuda_rand_states, sizeof(curandState_t) * ROBOTS * 2);
-	cudaMalloc((void**)&cuda_next_positions, sizeof(Position) * ROBOTS);
-	cudaMemcpy(cuda_next_positions, positions, sizeof(Position) * ROBOTS, cudaMemcpyHostToDevice);
-	initialize_robot_data_kernel <<< lingrid, block >>> ( cuda_robots, cuda_next_positions, cuda_rand_states);
+	local_robots = (Robot *)malloc(sizeof(Robot)*ROBOTS);
+	initialize_positions(positions);
+	HANDLE_ERROR(cudaMalloc((void**)&cuda_robots, sizeof(Robot) * ROBOTS));
+	HANDLE_ERROR(cudaMalloc((void**)&cuda_rand_states, sizeof(curandState_t) * ROBOTS * 2));
+	initialize_robot_data_kernel <<< lingrid, block >>> (cuda_robots, cuda_next_positions, cuda_rand_states);
+	cudaError_t err = cudaGetLastError();
+	if (err != cudaSuccess)
+		printf("Error: %s\n", cudaGetErrorString(err));
 }
 
 void simulation_step()
@@ -51,7 +62,7 @@ void simulation_step()
 	//collision_and_comms << < lingrid, block >> > (cuda_robots, cuda_next_positions);
 	update_state_kernel <<< lingrid, block >>> ( cuda_robots, cuda_next_positions, cuda_rand_states);
 	// download data
-	cudaMemcpy(local_robots, cuda_robots, sizeof(Robot) * ROBOTS, cudaMemcpyDeviceToHost);
+	HANDLE_ERROR(cudaMemcpy(local_robots, cuda_robots, sizeof(Robot) * ROBOTS, cudaMemcpyDeviceToHost));
 	// repopulate robots state
 	for (int rid=0;rid<ROBOTS;rid++)
 	{
@@ -59,10 +70,17 @@ void simulation_step()
 		kilobot.run_controller(local_robots + rid );
 		//julias function (local_robots (*ROBOTS))
 	}
-	cudaMemcpy(cuda_robots, local_robots, sizeof(Robot) * ROBOTS, cudaMemcpyHostToDevice);
+	HANDLE_ERROR(cudaMemcpy(cuda_robots, local_robots, sizeof(Robot) * ROBOTS, cudaMemcpyHostToDevice));
 	// upload state changes
 	
 }
+
+Position *download_position_data()
+{
+	cudaMemcpy(local_positions, cuda_next_positions, sizeof(Position) * ROBOTS, cudaMemcpyDeviceToHost);
+	return local_positions;
+}
+
 
 Robot *download_robot_data()
 {
@@ -76,6 +94,8 @@ void release_cuda_memory()
 	cudaFree(cuda_next_positions);
 	cudaFree(cuda_robots);
 	cudaFree(cuda_rand_states);
+	free(local_positions);
+	free(local_robots);
 	cudaThreadExit();
 }
 
@@ -176,9 +196,9 @@ __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions,
 	curand_init(rid, 0, 0, rand_states + ROBOTS + rid );
 
 	// intitialize position
-	robots[rid].position.theta += positions[rid].theta;
-	robots[rid].position.x += positions[rid].x;
-	robots[rid].position.y += positions[rid].y;
+	robots[rid].position.theta = positions[rid].theta;
+	robots[rid].position.x = positions[rid].x;
+	robots[rid].position.y = positions[rid].y;
 	
 	// initialize movement parameters 
 	// turn
