@@ -24,13 +24,6 @@ static dim3 lingrid(LINGRID,1);
 static dim3 block(TILELIMIT,1);
 static dim3 shapesgrid;
 
-void release_cuda_memory()
-{
-    cudaFree(cuda_robots);
-    cudaFree(cuda_next_positions);
-    cudaFree(cuda_robots);
-}
-
 void initialize_shapes(Rectangle *rectangles, int shapecount)// add upload shapes.
 {
     cudaMalloc((void**)&cuda_light_shapes, sizeof(Rectangle) * shapecount);
@@ -186,8 +179,6 @@ __global__ void initialize_robot_data_kernel(Robot *robots, Position *positions,
 	robots[rid].position.theta += positions[rid].theta;
 	robots[rid].position.x += positions[rid].x;
 	robots[rid].position.y += positions[rid].y;
-
-    // TODO: Include battery initialization (Gaussian distributed)
 	
 	// initialize movement parameters 
 	// turn
