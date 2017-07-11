@@ -12,6 +12,7 @@
 #include "util.h"
 #include "kilo_kernels.h"
 #include "robot.h"
+//#include "kilobot.cpp"
 
 Position *init_positions ();
 
@@ -21,7 +22,8 @@ int main(int argc, char* argv[])
 	initialize_robots(initial_positions);
 	Robot *robot = download_robot_data();
 	bool found_errors = false;
-	
+	const char *code_file = "C:\\Users\\germa\\Dropbox\\Research\\kilo_cuda\\src\\kilobot.cpp";
+
 	printf("CHECKING DATA\n");
 	for(int i = 0; i < ROBOTS; i++)
 	{
@@ -39,13 +41,15 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 	printf("DATA OK	\n");
+
+	printf("RUNNING\n");
 	for (int s=0; s<STEPS; s++)
     {
         simulation_step();
 		if (s%100==0) printf ( "step:%d or %d\r" ,(s+1)/TICS_PER_SECOND, SECONDS);
     }
 	printf("step:%d or %d\n", SECONDS, SECONDS);
-	release_robots();
+	release_cuda_memory();
  	printf("\ndone\n");     
 	getchar();
 }

@@ -1,8 +1,13 @@
 #ifndef ROBOT
 #define ROBOT
 
-#include <curand.h>
-#include <curand_kernel.h>
+#define uint8_t unsigned char
+#define int16_t short int
+#define uint16_t unsigned short int
+#define uint32_t unsigned int
+
+#define RGB(R__, G__, B__) (R__ & 3 << 4) + (G__ & 3 << 2) + (B__ & 3)
+#define CRC(D__) (D__[0] & 3 << 14) + (D__[1] & 3 << 12) + (D__[2] & 3 << 10) + (D__[3] & 3 << 8) + (D__[4] & 3 << 6) + (D__[5] & 3 << 4) + (D__[6] & 3 << 2) + (D__[7] & 3)
 
 #define ROBOTS 512
 #define ARENA_WIDTH 3000
@@ -59,11 +64,6 @@ struct Step
     float speed;
 };
 
-
-struct Led_Color
-{
-	float R, G, B;
-};
 struct Robot
 {
 	Position position;
@@ -72,10 +72,13 @@ struct Robot
 	unsigned char message_tx[MESSAGE_SIZE];
 	unsigned char message_rx[MESSAGE_SIZE];
 	bool tx_flag, rx_flag;
-	int left_motor, right_motor;
+	uint8_t left_motor, right_motor;
+	uint8_t rx_distance;
 	bool left_motor_active, right_motor_active;
-	curandState_t hstate, sstate;
-	Led_Color led;
+	uint8_t led;
+	int soft_rand_counter;
+	int16_t ambient_light;
+	int16_t battery;
 };
 
 struct Point {
@@ -88,6 +91,6 @@ struct Rectangle {
     float width;
     float height;
     short color[3];
-};
+};;
 
 #endif

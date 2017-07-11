@@ -1,44 +1,55 @@
+#ifndef KILOLIB
+#define KILOLIB
+#include <stdlib.h>  
 #include "robot.h"
-typedef void(*vFunctionCall)();
+
+struct distance_measurement_t
+{
+	int16_t low_gain, hi_gain;
+};
+
+struct message_t
+{
+	uint8_t data[9];
+	uint8_t type;
+	uint8_t crc;
+};
 
 class Kilobot
 {
 	Robot *this_robot;
 private:
-
+	typedef void(*message_rx_t)(message_t *, distance_measurement_t *d);
+	typedef message_t *(*message_tx_t)(void);
+	typedef void(*message_tx_success_t)(void);
 public:
-	long kilo_ticks = 0;
-	unsigned int kilo_turn_left = 255;
-	unsigned int kilo_turn_right = 255;
+	typedef void(*Loop)(void);
+	volatile uint32_t kilo_ticks;
+	volatile uint16_t kilo_tx_period;
+	uint16_t kilo_uid;
+	uint8_t kilo_turn_left;
+	uint8_t kilo_turn_right;
+	uint8_t kilo_straight_left;
+	uint8_t kilo_straight_right;
+	message_rx_t kilo_message_rx;
+	message_tx_t kilo_message_tx;
+	message_tx_success_t kilo_message_tx_success;
 	virtual void setup() = 0;
 	virtual void loop() = 0;
 	virtual int main() = 0;
-	void kilo_init()
-	{
-
-	};
-	void spinup_motors()
-	{
-		this_robot->left_motor_active = true;
-		this_robot->right_motor_active = true;
-	};
-	void set_motors(unsigned int l, unsigned int r)
-	{
-		this_robot->left_motor = l;
-		this_robot->right_motor = r;
-	};
-	void set_color(Led_Color c)
-	{
-		this_robot->led = c;
-	}
-	Led_Color RGB(float r, float g, float b)
-	{
-		return Led_Color{ r,g,b };
-	}
-	void run_controller(Robot *r)
-	{
-		this_robot = r;
-		loop();
-	};
-
+	void kilo_init();
+	uint8_t	estimate_distance(const distance_measurement_t *d);
+	uint8_t rand_hard();
+	uint8_t rand_soft();
+	void rand_seed(uint8_t seed);
+	int16_t get_ambientlight();
+	int16_t get_voltage();
+	int16_t get_temperature();
+	void set_motors(uint8_t left, uint8_t right);
+	void spinup_motors();
+	void set_color(uint8_t color);
+	uint16_t  message_crc(const message_t *msg);
+	void run_controller(Robot *r);
+	void run_setup(Robot *r);
 };
+#endif

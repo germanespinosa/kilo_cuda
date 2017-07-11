@@ -1,4 +1,6 @@
-#include <kilolib.h>
+#include "kilolib.h"
+class Kilo_Impl : public Kilobot {
+public:
 
 void setup() {
 	// put your setup code here, to be run only once
@@ -9,10 +11,10 @@ void loop() {
 	// put your main code here, to be run repeatedly
 	static int step = 0;
 
-	if (!(kilo_ticks % 128))
+	if (!(kilo_ticks ))
 	{
 		step++;
-		if (step % 4)
+		if (step )
 		{
 			set_motors(0, 0);
 			set_color(RGB(1, 0, 0));
@@ -33,4 +35,4 @@ int main() {
 	//kilo_start(setup, loop);
 
 	return 0;
-}
+}};
