@@ -9,7 +9,7 @@
 #define RGB(R__, G__, B__) (R__ & 3 << 4) + (G__ & 3 << 2) + (B__ & 3)
 #define CRC(D__) (D__[0] & 3 << 14) + (D__[1] & 3 << 12) + (D__[2] & 3 << 10) + (D__[3] & 3 << 8) + (D__[4] & 3 << 6) + (D__[5] & 3 << 4) + (D__[6] & 3 << 2) + (D__[7] & 3)
 
-#define ROBOTS 512
+#define ROBOTS 128
 #define ARENA_WIDTH 3000
 #define ARENA_HEIGHT 3000
 #define ROBOT_RADIUS 32
@@ -64,6 +64,15 @@ struct Step
     float speed;
 };
 
+<<<<<<< HEAD
+=======
+
+struct Led_Color
+{
+	float R, G, B;
+};
+
+>>>>>>> 30e0ae1723acd6948008a6ce9871206ef2fd7eab
 struct Robot
 {
 	Position position;
@@ -75,10 +84,21 @@ struct Robot
 	uint8_t left_motor, right_motor;
 	uint8_t rx_distance;
 	bool left_motor_active, right_motor_active;
+<<<<<<< HEAD
 	uint8_t led;
 	int soft_rand_counter;
 	int16_t ambient_light;
 	int16_t battery;
+=======
+	curandState_t hstate, sstate;
+	Led_Color led;
+	float battery = -1;
+	float distance_measurement;
+	bool message_sent = false;
+	//flag set to 1 when new message received
+	int incoming_message_flag;
+    unsigned int motor_command;
+>>>>>>> 30e0ae1723acd6948008a6ce9871206ef2fd7eab
 };
 
 struct Point {

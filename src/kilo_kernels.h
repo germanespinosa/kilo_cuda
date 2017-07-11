@@ -11,7 +11,12 @@
 #define ROBOTID blockIdx.x*TILELIMIT+threadIdx.x;
 #define SHAPEID blockIdx.y;
 #include "robot.h"
+<<<<<<< HEAD
 
+=======
+void release_cuda_memory();
+void initialize_shapes(Rectangle *rectangles);
+>>>>>>> 30e0ae1723acd6948008a6ce9871206ef2fd7eab
 void initialize_robots(Position *positions);
 //void initialize_shapes(Rectangle *rectangles);
 void compute_step();

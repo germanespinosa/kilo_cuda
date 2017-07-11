@@ -32,5 +32,17 @@ int main() {
 	// start program
 	//kilo_start(setup, loop);
 
+<<<<<<< HEAD
 	return 0;
 }
+=======
+		return 0;
+	}
+
+	void message_rx(message_t *message, distance_measurement_t *distance_measurement) {};
+	void message_tx_success() {};
+	message_t *message_tx() {
+        return NULL;
+    };
+};
+>>>>>>> 30e0ae1723acd6948008a6ce9871206ef2fd7eab
