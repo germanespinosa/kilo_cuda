@@ -4,6 +4,7 @@
 #include "kilocode.cpp"
 #include <curand.h>
 #include <curand_kernel.h>
+#include <pthread.h>
 
 static Robot         *cuda_robots;
 static Position      *cuda_next_positions;
@@ -25,6 +26,31 @@ __global__ void compute_light_kernel(Robot *robots, Rectangle *cuda_light_shapes
 static dim3 lingrid(LINGRID,1);
 static dim3 block(TILELIMIT,1);
 static dim3 shapesgrid;
+pthread_t controller_thread[THREADS];
+int threadids[THREADS];
+pthread_mutex_t controller_mutexes[THREADS];
+bool running = false;
+
+void *execute_controllers(void *tid_ptr)
+{
+	Kilo_Impl kilobot;
+	int tid = *((int *)tid_ptr);
+	printf("%d started\n", tid);
+	int rb = ROBOTS / THREADS * tid;
+	int rf = tid == THREADS -1? ROBOTS : ROBOTS / THREADS * (tid + 1);
+	printf("range %d %d\n", rb,rf);
+	while (running)
+	{
+		pthread_mutex_lock(controller_mutexes + tid);
+		//printf("%d waking up\n", tid);
+		for (int rid = rb; rid < rf; rid++)
+		{
+			kilobot.run_controller(local_robots + rid);
+		}
+		pthread_mutex_unlock(controller_mutexes + tid);
+	}
+	return NULL;
+}
 
 void initialize_shapes(Rectangle *rectangles, int shapecount)// add upload shapes.
 {
@@ -51,28 +77,38 @@ void initialize_robots(Position *positions) //
 	cudaError_t err = cudaGetLastError();
 	if (err != cudaSuccess)
 		printf("Error: %s\n", cudaGetErrorString(err));
+	running = true;
+	for (int tid = 0; tid < THREADS; tid++)
+	{
+		controller_mutexes[tid] = PTHREAD_MUTEX_INITIALIZER;
+		threadids[tid] = tid;
+		if (pthread_create(controller_thread+tid, NULL, execute_controllers, threadids+tid)) {
+			fprintf(stderr, "Error creating thread\n");
+		}
+	}
 }
 
 void simulation_step()
 {
-	Kilo_Impl kilobot;
+	//Kilo_Impl kilobot;
 	compute_step_kernel <<< lingrid, block >>> ( cuda_robots, cuda_next_positions, cuda_rand_states);
 	//compute_light <<< shapesgrid, block >>> ( cuda_robots, cuda_light_shapes );
 	collision_and_comms_kernel <<< lingrid, block >>> ( cuda_robots, cuda_next_positions, cuda_rand_states);
 	//collision_and_comms << < lingrid, block >> > (cuda_robots, cuda_next_positions);
 	update_state_kernel <<< lingrid, block >>> ( cuda_robots, cuda_next_positions, cuda_rand_states);
 	// download data
+	for (int tid = 0; tid < THREADS; tid++)
+		pthread_mutex_lock(controller_mutexes + tid);
 	HANDLE_ERROR(cudaMemcpy(local_robots, cuda_robots, sizeof(Robot) * ROBOTS, cudaMemcpyDeviceToHost));
-	// repopulate robots state
-	for (int rid=0;rid<ROBOTS;rid++)
-	{
-		// execute controller loop
-		kilobot.run_controller(local_robots + rid );
-		//julias function (local_robots (*ROBOTS))
-	}
+	for (int tid = 0; tid < THREADS; tid++)
+		pthread_mutex_unlock(controller_mutexes + tid);
+
+	for (int tid = 0; tid < THREADS; tid++)
+		pthread_mutex_lock(controller_mutexes + tid);
 	HANDLE_ERROR(cudaMemcpy(cuda_robots, local_robots, sizeof(Robot) * ROBOTS, cudaMemcpyHostToDevice));
 	// upload state changes
-	
+	for (int tid = 0; tid < THREADS; tid++)
+		pthread_mutex_unlock(controller_mutexes + tid);
 }
 
 Position *download_position_data()
@@ -90,6 +126,7 @@ Robot *download_robot_data()
 
 void release_cuda_memory()
 {
+	running = false;
 	cudaFree(cuda_robots);
 	cudaFree(cuda_next_positions);
 	cudaFree(cuda_robots);
