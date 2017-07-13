@@ -80,7 +80,7 @@ void initialize_robots(Position *positions) //
 	running = true;
 	for (int tid = 0; tid < THREADS; tid++)
 	{
-		controller_mutexes[tid] = PTHREAD_MUTEX_INITIALIZER;
+		pthread_mutex_init(controller_mutexes + tid, NULL);
 		threadids[tid] = tid;
 		if (pthread_create(controller_thread+tid, NULL, execute_controllers, threadids+tid)) {
 			fprintf(stderr, "Error creating thread\n");
